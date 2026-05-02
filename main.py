@@ -68,16 +68,26 @@ def print_header(title: str) -> None:
 
 
 def print_summary(label: str, items: list) -> None:
-    print(f"\n  [{label}] — {len(items)} records scraped:")
+    print(f"\n  [{label}] -- {len(items)} records scraped:")
     for item in items:
-        score = item.get("trust_score", "N/A")
-        author = item.get("author", "Unknown")[:30]
-        title  = item.get("title", item.get("source_url", ""))[:45]
+        score  = item.get("trust_score", "N/A")
+        author = item.get("author", "Unknown")
+        if len(author) > 45: author = author[:42] + "..."
+        title  = item.get("title", item.get("source_url", ""))[:50]
         date   = item.get("published_date", "Unknown")
         chunks = len(item.get("content_chunks", []))
         tags   = ", ".join(item.get("topic_tags", [])[:3])
-        print(f"    • {title}")
-        print(f"      Author: {author} | Date: {date} | Trust: {score}")
+        lang   = item.get("language", "?")
+        region = item.get("region", "?")
+        breakdown = item.get("trust_score_breakdown", {})
+        if breakdown:
+            parts = [f"{k[:10]}={v:.2f}" for k, v in breakdown.items()]
+            bd_str = "  [" + " | ".join(parts) + "]"
+        else:
+            bd_str = ""
+        print(f"    * {title}")
+        print(f"      Author: {author} | Date: {date} | Lang: {lang} | Region: {region}")
+        print(f"      Trust: {score}{bd_str}")
         print(f"      Tags: [{tags}] | Chunks: {chunks}")
 
 
@@ -186,10 +196,10 @@ def run_pipeline(run_blogs=True, run_youtube=True, run_pubmed=True) -> None:
         save_json(all_results, COMBINED_OUTPUT)
 
     elapsed = time.time() - start_time
-    print_header("Pipeline Complete")
-    print(f"  Total records : {len(all_results)}")
-    print(f"  Time elapsed  : {elapsed:.1f}s")
-    print(f"  Output dir    : {os.path.join(ROOT_DIR, 'output')}")
+    print("\n" + "="*60)
+    print("  PIPELINE COMPLETE | Records: {} | Time: {:.1f}s".format(len(all_results), elapsed))
+    print("  Output Directory: {}".format(os.path.join(ROOT_DIR, 'output')))
+    print("="*60)
 
 
 def parse_args():

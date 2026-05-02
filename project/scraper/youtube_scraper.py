@@ -8,13 +8,30 @@ import requests
 import os
 import sys
 import re
-from datetime import datetime
+from datetime import datetime, date as _date_type
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from project.utils.tagging import auto_tag
 from project.utils.chunking import chunk_text
-from project.scoring.trust_score import calculate_trust_score
+from project.scoring.trust_score import calculate_trust_score, get_score_breakdown
+
+
+def _validate_date(date_str: str) -> str:
+    """
+    Validate a date string (YYYY-MM-DD).
+    Returns 'Unknown' if the date is in the future (invalid parse artefact)
+    or cannot be parsed.
+    """
+    if not date_str or date_str == "Unknown":
+        return "Unknown"
+    try:
+        parsed = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
+        if parsed > _date_type.today():
+            return "Unknown"   # future date → scraping artefact, discard
+        return date_str[:10]
+    except ValueError:
+        return "Unknown"
 
 # Two YouTube video URLs (AI/ML and Data Science topics)
 YOUTUBE_URLS = [
@@ -83,10 +100,17 @@ def scrape_youtube_page(url: str) -> dict:
         # --- Method 1: yt-dlp (most reliable) ---
         try:
             import yt_dlp
+            import io as _io
             ydl_opts = {
                 "quiet": True,
+                "no_warnings": True,       # suppress JS runtime / ffmpeg warnings
                 "skip_download": True,
                 "extract_flat": False,
+                "logger": type("_NullLogger", (), {   # swallow all log output
+                    "debug": staticmethod(lambda m: None),
+                    "warning": staticmethod(lambda m: None),
+                    "error": staticmethod(lambda m: print(f"    [yt-dlp ERROR] {m}"))
+                })(),
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -94,7 +118,8 @@ def scrape_youtube_page(url: str) -> dict:
                 channel = info.get("uploader", info.get("channel", "Unknown"))
                 upload_date_raw = info.get("upload_date", "")  # YYYYMMDD
                 if upload_date_raw and len(upload_date_raw) == 8:
-                    published_date = f"{upload_date_raw[:4]}-{upload_date_raw[4:6]}-{upload_date_raw[6:8]}"
+                    parsed_date = f"{upload_date_raw[:4]}-{upload_date_raw[4:6]}-{upload_date_raw[6:8]}"
+                    published_date = _validate_date(parsed_date)
                 else:
                     published_date = "Unknown"
                 description = info.get("description", "") or ""
@@ -189,6 +214,11 @@ def scrape_youtube_page(url: str) -> dict:
             "region": "Global",
             "topic_tags": topic_tags,
             "trust_score": round(trust_score, 3),
+            "trust_score_breakdown": {k: round(v, 3) for k, v in get_score_breakdown(
+                author=channel, published_date=published_date,
+                domain="youtube.com", citation_count=0,
+                has_medical_disclaimer=False, source_type="youtube"
+            )["raw_scores"].items()},
             "view_count": view_count,
             "like_count": like_count,
             "content_chunks": chunks,

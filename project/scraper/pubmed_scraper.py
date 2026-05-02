@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 from project.utils.tagging import auto_tag
 from project.utils.chunking import chunk_text
-from project.scoring.trust_score import calculate_trust_score
+from project.scoring.trust_score import calculate_trust_score, get_score_breakdown
 
 # PubMed article PMIDs to scrape
 PUBMED_PMIDS = ["37349072"]  # Example: a recent AI in Healthcare article
@@ -140,7 +140,7 @@ def parse_pubmed_xml(xml_text: str, pmid: str) -> dict:
 
     # --- Chunking ---
     content_text = f"Title: {title}\n\nAuthors: {author_str}\n\nJournal: {journal}\n\nAbstract:\n{abstract}"
-    chunks = chunk_text(content_text, chunk_size=300)
+    chunks = chunk_text(content_text, chunk_size=200)
 
     # --- Trust score ---
     trust_score = calculate_trust_score(
@@ -165,6 +165,11 @@ def parse_pubmed_xml(xml_text: str, pmid: str) -> dict:
         "mesh_terms": mesh_terms[:10],
         "topic_tags": topic_tags,
         "trust_score": round(trust_score, 3),
+        "trust_score_breakdown": {k: round(v, 3) for k, v in get_score_breakdown(
+            author=author_str, published_date=pub_date_str,
+            domain="pubmed.ncbi.nlm.nih.gov", citation_count=citation_count,
+            has_medical_disclaimer=True, source_type="pubmed"
+        )["raw_scores"].items()},
         "citation_count": citation_count,
         "content_chunks": chunks,
     }

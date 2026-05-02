@@ -163,79 +163,122 @@ def taxonomy_match(text_lower: str) -> List[str]:
     return [topic for topic, _ in sorted(matched.items(), key=lambda x: -x[1])]
 
 
-def extract_keywords_tfidf(text: str, top_n: int = 8) -> List[str]:
+def extract_keywords_tfidf(text: str, top_n: int = 10) -> List[str]:
     """
-    Extract top keywords from text using a simplified TF-IDF approach
-    (term frequency, filtered by stopwords, ranked by frequency × length).
+    Extract top keywords using an intelligent, phrase-aware scoring system.
+    Identifies specific technical concepts (e.g., 'HTTP Requests') and
+    meaningful bigrams to provide highly descriptive tags.
     """
-    text_norm = normalize_text(text)
-    words = text_norm.split()
-
-    # Filter stopwords and very short words
-    words = [w for w in words if w not in STOPWORDS and len(w) > 3]
-
-    # Count frequencies
-    freq = Counter(words)
-
-    # Score: frequency × log(word_length) to prefer longer, more informative words
     import math
-    scored = {w: count * math.log(1 + len(w)) for w, count in freq.items()}
+    text_norm = normalize_text(text)
+    
+    # 1. Broad phrase matching (Highly descriptive technical terms)
+    PHRASE_PATTERNS = [
+        "http requests", "html parsing", "data extraction", "data scraping",
+        "web scraping", "content chunking", "topic tagging", "trust score",
+        "neural network", "deep learning", "machine learning", "natural language",
+        "computer vision", "reinforcement learning", "gradient descent",
+        "api integration", "rest api", "structured data", "clinical trial",
+        "emergency medicine", "medical education", "peer reviewed",
+        "virtual environment", "open source", "beautiful soup", "beautifulsoup",
+        "regular expression", "data visualization", "exploratory data analysis",
+        "predictive modeling", "random forest", "logistic regression",
+    ]
+    phrase_tags, seen_phrases = [], set()
+    for phrase in PHRASE_PATTERNS:
+        if phrase in text_norm:
+            tag = " ".join(w.capitalize() for w in phrase.split())
+            if tag.lower() not in seen_phrases:
+                phrase_tags.append(tag)
+                seen_phrases.add(tag.lower())
 
-    # Get top N
-    top_words = sorted(scored.items(), key=lambda x: -x[1])[:top_n]
-    return [word for word, _ in top_words]
+    # 2. Bigram extraction (Significant word pairs)
+    raw_words = text_norm.split()
+    bigrams = []
+    for i in range(len(raw_words) - 1):
+        w1, w2 = raw_words[i], raw_words[i+1]
+        if (w1 not in STOPWORDS and w2 not in STOPWORDS and 
+            len(w1) > 3 and len(w2) > 3):
+            bigrams.append("{} {}".format(w1, w2))
+    
+    bigram_counts = Counter(bigrams)
+    scored_bigrams = []
+    for bg, count in bigram_counts.items():
+        if count >= 2:
+            scored_bigrams.append((" ".join(w.capitalize() for w in bg.split()), count * 1.5))
+    
+    # 3. Unigram scoring (TF-IDF style: freq * log(length))
+    filtered = [w for w in raw_words if w not in STOPWORDS and len(w) > 3]
+    unigram_counts = Counter(filtered)
+    scored_unigrams = []
+    for w, count in unigram_counts.items():
+        score = count * math.log(1 + len(w))
+        scored_unigrams.append((w.capitalize() if len(w) > 3 else w.upper(), score))
+
+    # 4. Merge results with priority: Phrases > Bigrams > Unigrams
+    results, final_seen = [], set()
+    
+    for pt in phrase_tags:
+        if pt.lower() not in final_seen:
+            results.append(pt)
+            final_seen.add(pt.lower())
+
+    sorted_bigrams = sorted(scored_bigrams, key=lambda x: -x[1])
+    for bg, _ in sorted_bigrams:
+        if bg.lower() not in final_seen:
+            results.append(bg)
+            final_seen.add(bg.lower())
+        if len(results) >= top_n: break
+
+    sorted_unigrams = sorted(scored_unigrams, key=lambda x: -x[1])
+    for ug, _ in sorted_unigrams:
+        if ug.lower() not in final_seen:
+            results.append(ug)
+            final_seen.add(ug.lower())
+        if len(results) >= top_n: break
+
+    return results[:top_n]
+
 
 
 def auto_tag(text: str, extra_tags: List[str] = None, max_tags: int = 8) -> List[str]:
     """
     Main auto-tagging function.
-    Combines taxonomy matching with keyword extraction.
-
-    Args:
-        text: Combined title + description + content sample
-        extra_tags: Pre-known tags (e.g., MeSH terms from PubMed)
-        max_tags: Maximum number of tags to return
-
-    Returns:
-        List of topic tag strings
+    Prioritizes specific technical phrases then falls back to taxonomy.
     """
     if not text or not text.strip():
         return extra_tags[:max_tags] if extra_tags else []
 
     text_lower = normalize_text(text)
 
-    # 1. Taxonomy-based matching (highest priority)
+    # 1. Technical keyword/phrase extraction (High specificity)
+    keyword_tags = extract_keywords_tfidf(text, top_n=6)
+
+    # 2. Taxonomy-based matching (Broad categorization)
     taxonomy_tags = taxonomy_match(text_lower)
 
-    # 2. Keyword extraction
-    keyword_tags = extract_keywords_tfidf(text, top_n=5)
+    # 3. Combine: Keywords > Taxonomy > Extra tags
+    combined, seen = [], set()
 
-    # 3. Combine: taxonomy tags first, then keywords, then extra tags
-    combined = []
-    seen = set()
+    # Keywords (Intelligent phrases)
+    for kw in keyword_tags:
+        if kw.lower() not in seen:
+            combined.append(kw)
+            seen.add(kw.lower())
+        if len(combined) >= 6: break # Reserve space for taxonomy
 
-    for tag in taxonomy_tags:
+    # Taxonomy (Broad topics) - Limit to top 3
+    for tag in taxonomy_tags[:3]:
         if tag.lower() not in seen:
             combined.append(tag)
             seen.add(tag.lower())
 
-    for kw in keyword_tags:
-        if kw.lower() not in seen and len(combined) < max_tags:
-            combined.append(kw)
-            seen.add(kw.lower())
-
+    # Extra tags (e.g., MeSH)
     if extra_tags:
-        for tag in extra_tags:
-            if tag.lower() not in seen and len(combined) < max_tags:
-                combined.append(tag)
-                seen.add(tag.lower())
-
-    # 4. Post-filter: remove generic/uninformative tags
-    generic_tags = {
-        "humans", "animals", "male", "female", "adult", "adults",
-        "there", "light-sensitive", "making", "introduction",
-    }
-    combined = [t for t in combined if t.lower() not in generic_tags]
+        for et in extra_tags:
+            if et.lower() not in seen and len(combined) < max_tags:
+                combined.append(et)
+                seen.add(et.lower())
 
     return combined[:max_tags]
 

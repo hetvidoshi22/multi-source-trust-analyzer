@@ -9,13 +9,21 @@
     "region": "Global",
     "topic_tags": [
       "Web Scraping",
+      "Beautiful Soup",
+      "Regular Expression",
+      "Practical Introduction",
+      "Parse Data",
       "Python",
-      "Education",
-      "scraping",
-      "tutorial",
-      "websites"
+      "Education"
     ],
     "trust_score": 0.692,
+    "trust_score_breakdown": {
+      "author_credibility": 0.65,
+      "domain_authority": 0.75,
+      "recency": 0.762,
+      "citation_count": 0.5,
+      "medical_disclaimer": 0.9
+    },
     "content_chunks": [
       "Introduction to Web Scraping With Python(38m)\nPython web scraping allows you to collect and parse data from websites programmatically. With powerful libraries likeurllib, Beautiful Soup, and MechanicalSoup, you can fetch and manipulate HTML content effortlessly. By automating data collection tasks, Python makes web scraping both efficient and effective. By the end of this tutorial, you’ll understand that:\nThis tutorial guides you through extracting data from websites using string methods, regular expressions, and HTML parsers.",
       "ng methods, regular expressions, and HTML parsers. Note:This tutorial is adapted from the chapter “Interacting With the Web” inPython Basics: A Practical Introduction to Python 3. The book uses Python’s built-inIDLEeditor to create and edit Python files and interact with the Python shell, so you’ll see occasional references to IDLE throughout this tutorial. However, you should have no problems running the example code from theeditorandenvironmentof your choice. Source Code:Click here to download the free source codethat you’ll use to collect and parse data from the Web.",
@@ -97,15 +105,23 @@
     "language": "en",
     "region": "Global",
     "topic_tags": [
+      "Http Requests",
+      "Requests Library",
+      "Requests",
       "Python",
+      "Library",
+      "Tutorial",
       "Web Scraping",
-      "Education",
-      "requests",
-      "library",
-      "tutorial",
-      "download"
+      "Education"
     ],
     "trust_score": 0.681,
+    "trust_score_breakdown": {
+      "author_credibility": 0.65,
+      "domain_authority": 0.75,
+      "recency": 0.856,
+      "citation_count": 0.5,
+      "medical_disclaimer": 0.6
+    },
     "content_chunks": [
       "TheRequestslibrary is the go-to package for making HTTP requests in Python. It abstracts the complexities of making requests behind an intuitiveAPI. Though not part of Python’s standard library, it’s worth considering Requests to perform HTTP actions like GET, POST, and more. By the end of this tutorial, you’ll understand that:\nThis tutorial guides you through customizing requests with headers and data, handling responses, authentication, and optimizing performance using sessions and retries.",
       "optimizing performance using sessions and retries. If you want to explore the code examples that you’ll see in this tutorial, then you can download them here:\nGet Your Code:Click here to download the free sample codethat shows you how to use Python’s Requests library. Take the Quiz:Test your knowledge with our interactive “Python's Requests Library” quiz. You’ll receive a score upon completion to help you track your learning progress:\nTest your understanding of the Python Requests library for making HTTP requests and interacting with web services.",
@@ -171,14 +187,21 @@
     "region": "Global",
     "topic_tags": [
       "Web Scraping",
+      "Beautiful Soup",
+      "Static Websites",
+      "Beautiful",
       "Python",
-      "Education",
-      "beautiful",
-      "soup",
-      "static",
-      "tutorial"
+      "Soup",
+      "Education"
     ],
     "trust_score": 0.661,
+    "trust_score_breakdown": {
+      "author_credibility": 0.65,
+      "domain_authority": 0.75,
+      "recency": 0.753,
+      "citation_count": 0.5,
+      "medical_disclaimer": 0.6
+    },
     "content_chunks": [
       "Web Scraping With Beautiful Soup and Python(2h 32m)\nBeautiful Soup is a Python library designed for parsing HTML and XML documents. It creates parse trees that make it straightforward to extract data from HTML documents you’ve scraped from the internet. Beautiful Soup is a useful tool in yourweb scrapingtoolkit, allowing you to conveniently extract specific information from HTML, even from complex static websites. In this tutorial, you’ll learn how to build a web scraper using Beautiful Soup along with theRequests libraryto scrape and parse job listings from a static website.",
       "rape and parse job listings from a static website. Static websites provide consistent HTML content, while dynamic sites may require handling JavaScript. For dynamic websites, you’ll need to incorporate additional tools that can execute JavaScript, such asScrapyorSelenium. By the end of this tutorial, you’ll understand that:\nWorking through this project will give you the knowledge and tools that you need to scrape any static website out there on the World Wide Web. If you like learning with hands-on examples and have a basic understanding of Python andHTML, then this tutorial is for you!",

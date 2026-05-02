@@ -1,20 +1,49 @@
 """
 trust_score.py
-Trust Score Algorithm
+──────────────────────────────────────────────────────────────────────────────
+TRUST SCORE ALGORITHM DESIGN & LOGIC
+──────────────────────────────────────────────────────────────────────────────
 
-Formula:
-  Trust Score = f(author_credibility, citation_count, domain_authority,
-                  recency, medical_disclaimer_presence)
+The Trust Score evaluates the reliability of a content source using a rule-based
+weighted algorithm. It combines metadata verification with domain authority
+and content-based heuristics.
 
-Each component is normalized to [0, 1] and combined via weighted sum.
-Final score is clamped to [0.0, 1.0].
+FORMULA:
+  Trust Score = sum(Component_Score_i * Weight_i)
 
-Weights (sum = 1.0):
-  author_credibility          : 0.25
-  domain_authority            : 0.25
-  recency                     : 0.20
-  citation_count              : 0.20
-  medical_disclaimer_presence : 0.10
+COMPONENTS & WEIGHTING RATIONALE:
+
+1. Author Credibility (25%):
+   - Rationale: Verified authors or reputable organizations are the strongest
+     indicators of reliable information.
+   - Logic: Matches against known credible organizations (e.g., WHO, MIT),
+     verifies name patterns, and penalizes anonymous or fake-looking authors.
+
+2. Domain Authority (25%):
+   - Rationale: Established platforms have editorial standards or peer-review
+     processes that filter out low-quality content.
+   - Logic: Uses a curated DA map (PubMed=1.0, RealPython=0.75) and TLD-based
+     heuristics (.gov/.edu = high, .xyz/.info = low).
+
+3. Recency (20%):
+   - Rationale: In fast-moving fields (Tech/Medicine), older information
+     loses relevance and reliability.
+   - Logic: Exponential decay based on years since publication.
+
+4. Citation Count (20%):
+   - Rationale: Academic impact and cross-referencing by others validate
+     the significance and correctness of a source.
+   - Logic: Log-normalized score (capped at 500+ citations). Neutral for
+     non-academic sources where citations aren't standard.
+
+5. Medical Disclaimer (10%):
+   - Rationale: Transparency regarding the nature of medical advice is
+     essential for trust in health-related content.
+   - Logic: Rewards presence of disclaimers and penalizes health content
+     lacking them or containing misinformation keywords.
+
+SCORING CLAMP:
+  The final score is clamped between [0.0, 1.0].
 """
 
 from datetime import datetime, date

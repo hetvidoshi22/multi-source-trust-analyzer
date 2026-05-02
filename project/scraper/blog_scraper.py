@@ -5,7 +5,7 @@ Scrapes 3 blog posts and returns structured JSON data.
 
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, date as _date_type
 import sys
 import os
 
@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 from project.utils.tagging import auto_tag
 from project.utils.chunking import chunk_text
-from project.scoring.trust_score import calculate_trust_score
+from project.scoring.trust_score import calculate_trust_score, get_score_breakdown
 
 
 BLOG_URLS = [
@@ -30,6 +30,22 @@ HEADERS = {
         "Chrome/124.0.0.0 Safari/537.36"
     )
 }
+
+
+def _validate_date(date_str: str) -> str:
+    """
+    Validate a date string (YYYY-MM-DD).
+    Returns 'Unknown' if the date is in the future or cannot be parsed.
+    """
+    if not date_str or date_str == "Unknown":
+        return "Unknown"
+    try:
+        parsed = datetime.strptime(date_str[:10], "%Y-%m-%d").date()
+        if parsed > _date_type.today():
+            return "Unknown"   # future date → scraping artefact, discard
+        return date_str[:10]
+    except ValueError:
+        return "Unknown"
 
 
 def detect_language(text: str) -> str:
@@ -76,28 +92,51 @@ def extract_author_medium(soup: BeautifulSoup) -> str:
 
 
 def extract_published_date(soup: BeautifulSoup) -> str:
-    """Extract published date from common meta tags and JSON-LD."""
+    """
+    Extract published date with priority on article:published_time 
+    and datePublished to avoid future-date bugs or update-date confusion.
+    """
     import json
-    # JSON-LD
-    ld = soup.find("script", type="application/ld+json")
-    if ld:
-        try:
-            data = json.loads(ld.string)
-            if isinstance(data, list):
-                data = data[0]
-            date = data.get("datePublished") or data.get("dateCreated")
-            if date:
-                return date[:10]
-        except Exception:
-            pass
-
-    # Meta tags
-    for prop in ["article:published_time", "datePublished", "date"]:
+    
+    # 1. Priority Meta Tags (Specific to publication)
+    priority_props = ["article:published_time", "pubdate", "publish-date"]
+    for prop in priority_props:
         tag = soup.find("meta", attrs={"property": prop}) or soup.find("meta", attrs={"name": prop})
         if tag and tag.get("content"):
             return tag["content"][:10]
 
-    # time element
+    # 2. JSON-LD (Search for datePublished)
+    ld_tags = soup.find_all("script", type="application/ld+json")
+    for ld in ld_tags:
+        try:
+            data = json.loads(ld.string)
+            if isinstance(data, list): data = data[0]
+            
+            def find_key(d, key):
+                if not isinstance(d, dict): return None
+                if key in d: return d[key]
+                for v in d.values():
+                    if isinstance(v, dict):
+                        res = find_key(v, key)
+                        if res: return res
+                    elif isinstance(v, list):
+                        for item in v:
+                            res = find_key(item, key)
+                            if res: return res
+                return None
+            
+            dt = find_key(data, "datePublished")
+            if dt: return str(dt)[:10]
+        except: pass
+
+    # 3. Fallback Meta Tags
+    fallback_props = ["datePublished", "date", "DC.date.issued"]
+    for prop in fallback_props:
+        tag = soup.find("meta", attrs={"property": prop}) or soup.find("meta", attrs={"name": prop})
+        if tag and tag.get("content"):
+            return tag["content"][:10]
+
+    # 4. Time element
     time_tag = soup.find("time")
     if time_tag:
         return time_tag.get("datetime", time_tag.get_text(strip=True))[:10]
@@ -149,7 +188,7 @@ def scrape_blog(url: str) -> dict:
             title = title_tag.get_text(strip=True) if title_tag else "Unknown Title"
 
         author = extract_author_medium(soup)
-        published_date = extract_published_date(soup)
+        published_date = _validate_date(extract_published_date(soup))
         content = extract_blog_content(soup)
 
         # Language detection
@@ -179,6 +218,16 @@ def scrape_blog(url: str) -> dict:
             source_type="blog",
         )
 
+        # Trust score breakdown for transparency
+        breakdown = get_score_breakdown(
+            author=author,
+            published_date=published_date,
+            domain=domain,
+            citation_count=0,
+            has_medical_disclaimer="disclaimer" in content.lower() or "consult" in content.lower(),
+            source_type="blog",
+        )
+
         return {
             "source_url": url,
             "source_type": "blog",
@@ -189,6 +238,7 @@ def scrape_blog(url: str) -> dict:
             "region": region,
             "topic_tags": topic_tags,
             "trust_score": round(trust_score, 3),
+            "trust_score_breakdown": {k: round(v, 3) for k, v in breakdown["raw_scores"].items()},
             "content_chunks": chunks,
         }
 

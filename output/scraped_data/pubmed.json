@@ -19,20 +19,29 @@
       "Accreditation"
     ],
     "topic_tags": [
+      "Emergency Medicine",
+      "Medical Education",
+      "American Board",
+      "United States",
+      "Emergency",
+      "Medicine",
       "Healthcare",
-      "Education",
-      "emergency",
-      "medicine",
-      "training",
-      "residency",
-      "programs"
+      "Education"
     ],
     "trust_score": 0.698,
+    "trust_score_breakdown": {
+      "author_credibility": 0.85,
+      "domain_authority": 1.0,
+      "recency": 0.567,
+      "citation_count": 0.112,
+      "medical_disclaimer": 1.0
+    },
     "citation_count": 1,
     "content_chunks": [
-      "Title: American Board of Emergency Medicine Report on Residency and Fellowship Training Information (2022-2023).\n\nAuthors: Theodore J Gaeta; Yvette Calderon; Felix K Ankel; Marianne Gausche-Hill; Diane L Gorgas; Deepi G Goyal; Robert G Purosky; Andrew Trotter; Mary M Johnston",
-      "Robert G Purosky; Andrew Trotter; Mary M Johnston Abstract:\nThe American Board of Emergency Medicine gathers extensive background information on the Accreditation Council of Graduate Medical Education-accredited emergency medicine residency and fellowship programs and the residents and fellows training in those programs.",
-      "residents and fellows training in those programs. We present the 2023 annual report on the status of physicians training in ACGME-accredited emergency medicine training programs in the United States."
+      "Title: American Board of Emergency Medicine Report on Residency and Fellowship Training Information (2022-2023).",
+      "y and Fellowship Training Information (2022-2023). Authors: Theodore J Gaeta; Yvette Calderon; Felix K Ankel; Marianne Gausche-Hill; Diane L Gorgas; Deepi G Goyal; Robert G Purosky; Andrew Trotter; Mary M Johnston",
+      "Robert G Purosky; Andrew Trotter; Mary M Johnston Abstract: The American Board of Emergency Medicine gathers extensive background information on the Accreditation Council of Graduate Medical Education-accredited emergency medicine residency and",
+      "cation-accredited emergency medicine residency and We present the 2023 annual report on the status of physicians training in ACGME-accredited emergency medicine training programs in the United States."
     ]
   }
 ]
