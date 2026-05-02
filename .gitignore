@@ -1,0 +1,64 @@
+# ─── Python ───────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# ─── Virtual Environments ─────────────────────────
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ─── Distribution / Packaging ─────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+wheels/
+
+# ─── Testing ──────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.tox/
+
+# ─── IDEs & Editors ───────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ─── OS Files ─────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ─── Project-Specific ─────────────────────────────
+# Keep output JSON files (they are submission deliverables)
+# but ignore any large raw cache or temp files
+*.log
+*.tmp
+*.bak
+
+# Analysis/verify scripts are dev tools, not submission
+analyze_output.py
+verify_output.py
+
+# ─── Secrets / API Keys ───────────────────────────
+.env
+*.env
+secrets.json
+config.local.py
