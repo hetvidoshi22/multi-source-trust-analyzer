@@ -61,3 +61,4 @@ verify_output.py
 secrets.json
 config.local.py
 
+echo report.md >> .gitignore
