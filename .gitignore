@@ -60,3 +60,5 @@ verify_output.py
 *.env
 secrets.json
 config.local.py
+
+echo report.md >> .gitignore
